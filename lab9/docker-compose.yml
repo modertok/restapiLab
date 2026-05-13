@@ -1,0 +1,77 @@
+services:
+
+  # ── PostgreSQL database ──────────────────────────────────────────────────
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: library
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI application (load-test target) ───────────────────────────────
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/library
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: on-failure
+
+  # ── Locust — web UI mode (http://localhost:8089) ─────────────────────────
+
+  locust:
+    image: locustio/locust
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./locustfile.py:/mnt/locust/locustfile.py
+    command: -f /mnt/locust/locustfile.py --host=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # ── Locust — headless mode (generates HTML report) ───────────────────────
+  # Usage: docker compose --profile headless up locust-headless
+
+  locust-headless:
+    image: locustio/locust
+    profiles:
+      - headless
+    volumes:
+      - ./locustfile.py:/mnt/locust/locustfile.py
+      - ./reports:/mnt/locust/reports
+    command: >
+      -f /mnt/locust/locustfile.py
+      --host=http://api:8000
+      --headless
+      --users=50
+      --spawn-rate=10
+      --run-time=60s
+      --html=/mnt/locust/reports/report.html
+      --csv=/mnt/locust/reports/results
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
