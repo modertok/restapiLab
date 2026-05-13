@@ -11,3 +11,4 @@ venv/
 dist/
 build/
 LAB_EXPLANATION.md
+*.db
