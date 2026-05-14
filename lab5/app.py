@@ -21,6 +21,10 @@ SWAGGER_CONFIG = {
     ],
     "swagger_ui": True,
     "specs_route": "/docs",
+    "swagger_ui_bundle_js": "https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js",
+    "swagger_ui_standalone_preset_js": "https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js",
+    "swagger_ui_css": "https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
+    "jquery_js": "https://unpkg.com/jquery@3/dist/jquery.min.js",
 }
 
 SWAGGER_TEMPLATE = {
