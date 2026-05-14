@@ -1,0 +1,8 @@
+services:
+  prism:
+    image: stoplight/prism:4
+    command: mock -h 0.0.0.0 --dynamic /etc/prism/openapi.yaml
+    ports:
+      - "4010:4010"
+    volumes:
+      - ./openapi.yaml:/etc/prism/openapi.yaml:ro

@@ -1,0 +1,29 @@
+services:
+  mongo:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_DATABASE: library
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      MONGO_DB: library
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  mongo_data:
